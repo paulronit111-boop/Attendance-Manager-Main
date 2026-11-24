@@ -10,10 +10,27 @@ from io import BytesIO
 # 1. PAGE CONFIGURATION
 # ==================================================
 
-st.image("logo.png", width=180)
+# Use the same logo file throughout the app. Keep a fallback so the app
+# still starts if logo.png has not yet been uploaded to the GitHub repository.
+LOGO_PATH = Path(__file__).parent / "logo.png"
 
-st.title("Statistics Department")
-st.caption("Gurucharan University, Silchar")
+st.set_page_config(
+    page_title="Gurucharan University | Statistics Department | Attendance",
+    page_icon=str(LOGO_PATH) if LOGO_PATH.is_file() else "📊",
+    layout="wide"
+)
+
+def show_department_branding():
+    logo_col, title_col = st.columns([1, 5], vertical_alignment="center")
+    with logo_col:
+        if LOGO_PATH.is_file():
+            st.image(str(LOGO_PATH), width=145)
+        else:
+            st.markdown("## 📊")
+    with title_col:
+        st.markdown("### Gurucharan University, Silchar")
+        st.markdown("**Statistics Department**")
+        st.caption("Attendance")
 
 SEMESTERS = [
     "2nd Semester",
@@ -202,8 +219,8 @@ if "user_id" not in st.session_state:
 
 if not st.session_state.user_id:
 
-    st.title("📊 Statistics Department")
-    st.subheader("Attendance Manager")
+    show_department_branding()
+    st.subheader("Lecturer Attendance")
 
     login_tab, signup_tab = st.tabs([
         "Lecturer Login",
@@ -327,8 +344,7 @@ except Exception as e:
     st.stop()
 
 
-st.title("📊 Statistics Department")
-st.subheader("Attendance Manager")
+show_department_branding()
 
 
 # ==================================================
@@ -1527,6 +1543,6 @@ elif page == "Attendance Reports":
 st.divider()
 
 st.caption(
-    "Statistics Department – Attendance Manager | "
+    "Gurucharan University, Silchar | Statistics Department | Attendance | "
     "Powered by Streamlit and Supabase"
 )
