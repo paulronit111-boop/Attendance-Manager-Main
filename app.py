@@ -10,11 +10,10 @@ from io import BytesIO
 # 1. PAGE CONFIGURATION
 # ==================================================
 
-st.set_page_config(
-    page_title="Statistics Department – Attendance Manager",
-    page_icon="📊",
-    layout="wide"
-)
+st.image("logo.png", width=180)
+
+st.title("Statistics Department")
+st.caption("Gurucharan University, Silchar")
 
 SEMESTERS = [
     "2nd Semester",
