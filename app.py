@@ -221,7 +221,7 @@ if "user_id" not in st.session_state:
 if not st.session_state.user_id:
 
     show_department_branding()
-    st.subheader("Lecturer Attendance")
+    
 
     login_tab, signup_tab = st.tabs([
         "Lecturer Login",
