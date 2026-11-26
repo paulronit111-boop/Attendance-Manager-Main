@@ -543,7 +543,7 @@ class _ClassRecordsScreenState extends State<ClassRecordsScreen> {
                                     student['status'];
                               }
 
-                              if (!mounted) return;
+                              if (!dialogContext.mounted) return;
 
                               Navigator.pop(dialogContext);
 

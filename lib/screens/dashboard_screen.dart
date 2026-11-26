@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
@@ -24,15 +25,19 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _checkingForUpdates = false;
+
   @override
   void initState() {
     super.initState();
 
+    // Automatically check for updates when dashboard opens.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdates();
     });
   }
 
+  // Logout.
   Future<void> logout(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
 
@@ -44,12 +49,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<void> _checkForUpdates() async {
-    // APK updates are only for Android.
-    // Web updates are published through Firebase Hosting.
+  // Check for app updates.
+  Future<void> _checkForUpdates({bool showStatus = false}) async {
+    // APK updates are only supported on Android.
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      if (showStatus && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'APK updates are available only on Android.',
+            ),
+          ),
+        );
+      }
       return;
     }
+
+    if (_checkingForUpdates) return;
+
+    setState(() {
+      _checkingForUpdates = true;
+    });
 
     try {
       final packageInfo = await PackageInfo.fromPlatform();
@@ -66,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode != 200) {
-        return;
+        throw Exception('Could not contact the update server.');
       }
 
       final Map<String, dynamic> updateInfo =
@@ -75,7 +95,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final latestBuild =
           int.tryParse('${updateInfo['build_number']}') ?? 0;
 
+      // No new update available.
       if (latestBuild <= currentBuild) {
+        if (showStatus && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Your app is already up to date.',
+              ),
+            ),
+          );
+        }
         return;
       }
 
@@ -92,9 +122,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final forceUpdate =
           updateInfo['force_update'] == true;
 
-      if (apkUrl.isEmpty || !mounted) {
-        return;
+      if (apkUrl.isEmpty) {
+        throw Exception('The APK download link is missing.');
       }
+
+      if (!mounted) return;
 
       _showUpdateDialog(
         version: latestVersion,
@@ -104,9 +136,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     } catch (error) {
       debugPrint('Update check failed: $error');
+
+      if (showStatus && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not check for updates: $error',
+            ),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _checkingForUpdates = false;
+        });
+      }
     }
   }
 
+  // Display update dialog.
   void _showUpdateDialog({
     required String version,
     required String apkUrl,
@@ -183,10 +233,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               setDialogState(() {
                                 downloading = false;
                               });
-                            }
 
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(dialogContext)
+                                  .showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Update failed: $error',
@@ -221,6 +270,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Statistics Department'),
         actions: [
+          // Manual Check for Updates button.
+          IconButton(
+            tooltip: 'Check for Updates',
+            onPressed: _checkingForUpdates
+                ? null
+                : () => _checkForUpdates(showStatus: true),
+            icon: _checkingForUpdates
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.system_update),
+          ),
+
+          // Logout button.
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
@@ -241,7 +308,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.indigo,
                 ),
                 const SizedBox(height: 12),
-
                 const Text(
                   'Gurucharan University, Silchar',
                   textAlign: TextAlign.center,
@@ -250,14 +316,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const Text(
                   'Statistics Department',
                   style: TextStyle(fontSize: 17),
                 ),
-
                 const SizedBox(height: 35),
 
+                // Manage Students.
                 dashboardCard(
                   context,
                   title: 'Manage Students',
@@ -274,6 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
 
+                // Mark Attendance.
                 dashboardCard(
                   context,
                   title: 'Mark Attendance',
@@ -290,6 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
 
+                // Attendance Reports.
                 dashboardCard(
                   context,
                   title: 'Attendance Reports',
@@ -300,12 +367,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const AttendanceReportScreen(),
+                        builder: (_) =>
+                            const AttendanceReportScreen(),
                       ),
                     );
                   },
                 ),
 
+                // Class Records.
                 dashboardCard(
                   context,
                   title: 'Class Records',
@@ -330,6 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Reusable dashboard card.
   Widget dashboardCard(
     BuildContext context, {
     required String title,
@@ -345,11 +415,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         leading: CircleAvatar(
           radius: 27,
           backgroundColor: color.withValues(alpha: 0.12),
-          child: Icon(icon, color: color, size: 28),
+          child: Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Text(subtitle),
         trailing: const Icon(
