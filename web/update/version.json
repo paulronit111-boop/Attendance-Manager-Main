@@ -1,0 +1,7 @@
+{
+  "version": "1.0.1",
+  "build_number": 2,
+  "apk_url": "https://statistics-attendence.web.app/downloads/statistics_attendance.apk",
+  "release_notes": "Attendance application update with automatic update checking.",
+  "force_update": false
+}

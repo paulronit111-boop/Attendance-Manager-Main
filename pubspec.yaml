@@ -1,0 +1,49 @@
+
+name: statistics_attendance
+description: "Statistics Department Attendance Management Application"
+publish_to: 'none'
+
+version: 1.0.1+2
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  supabase_flutter: ^2.18.3
+  excel: ^4.0.6
+  file_picker: ^13.4.1
+  intl: ^0.20.3
+  material_ui: ^1.11.1
+
+  package_info_plus: ^10.2.2
+  path_provider: ^2.1.6
+  open_filex: ^5.0.0
+  http: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/department_logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/department_logo.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/department_logo.png"
+  remove_alpha_ios: true
